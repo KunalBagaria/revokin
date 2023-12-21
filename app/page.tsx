@@ -308,6 +308,12 @@ export default function Home() {
           </Tab>
 
           <Tab key="nfts" title="NFTs" className="w-full">
+            <p className="text-center text-md font-semibold mb-4">
+              Note that if you have staked your NFT or listed it for sale, it
+              might show up as a delegated NFT. Exercise caution and verify
+              before revoking delegation.
+            </p>
+
             {nfts && (
               <Table aria-label="NFTs">
                 <TableHeader>
