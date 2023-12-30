@@ -158,6 +158,7 @@ export default function Home() {
         delegate,
         delegatedAmount,
         metadata: nftMetadatas.find((metadata) => {
+          if (metadata === null) return null
           if (!(metadata as any).mintAddress) return null
 
           return (metadata as any).mintAddress.toBase58() === mintAddress
