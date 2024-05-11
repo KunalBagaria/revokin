@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                Int            @id @default(autoincrement())
+  name              String
+  createdAt         DateTime       @default(now())
+  telegramId        String
+  mainWalletAddress String
+  wallets           Wallet[]
+  subscriptions     Subscription[]
+}
+
+model Subscription {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  stripeId  String
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Wallet {
+  id      Int    @id @default(autoincrement())
+  address String
+  userId  Int
+  user    User   @relation(fields: [userId], references: [id])
+}
