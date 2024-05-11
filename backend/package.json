@@ -1,0 +1,22 @@
+{
+  "name": "backend",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "prisma": "^5.13.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@grammyjs/auto-retry": "^2.0.1",
+    "@grammyjs/conversations": "^1.2.0",
+    "@grammyjs/ratelimiter": "^1.2.0",
+    "@grammyjs/runner": "^2.0.3",
+    "@grammyjs/transformer-throttler": "^1.2.1",
+    "@solana/spl-token": "^0.4.6",
+    "@solana/web3.js": "^1.91.8",
+    "grammy": "^1.23.0"
+  }
+}
