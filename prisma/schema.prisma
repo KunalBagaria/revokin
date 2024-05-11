@@ -8,18 +8,18 @@ datasource db {
 }
 
 model User {
-  id                Int            @id @default(autoincrement())
-  name              String
-  createdAt         DateTime       @default(now())
-  telegramId        String
-  mainWalletAddress String
-  wallets           Wallet[]
-  subscriptions     Subscription[]
+  id               String            @id @default(uuid())
+  name             String
+  createdAt        DateTime          @default(now())
+  telegramId       String
+  wallets          Wallet[]
+  subscriptions    Subscription[]
+  notificationLogs  NotificationLog[]
 }
 
 model Subscription {
-  id        Int      @id @default(autoincrement())
-  userId    Int
+  id        String   @id @default(uuid())
+  userId    String
   user      User     @relation(fields: [userId], references: [id])
   stripeId  String
   isActive  Boolean  @default(false)
@@ -28,8 +28,29 @@ model Subscription {
 }
 
 model Wallet {
-  id      Int    @id @default(autoincrement())
-  address String
-  userId  Int
-  user    User   @relation(fields: [userId], references: [id])
+  id           String         @id @default(uuid())
+  address      String
+  isMainWallet Boolean        @default(false)
+  userId       String
+  user         User           @relation(fields: [userId], references: [id])
+  tokenAccount TokenAccount[]
+}
+
+model TokenAccount {
+  id          String   @id @default(uuid())
+  address     String
+  isDelegated Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  walletId    String
+  wallet      Wallet   @relation(fields: [walletId], references: [id])
+}
+
+model NotificationLog {
+  id            String   @id @default(uuid())
+  message       String
+  sentAt        DateTime @default(now())
+  wasSuccessful Boolean
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
 }
