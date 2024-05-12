@@ -11,10 +11,11 @@ model User {
   id               String            @id @default(uuid())
   name             String
   createdAt        DateTime          @default(now())
-  telegramId       String
+  telegramId       Int?              @unique
+  tgConnectCode    String            @unique
   wallets          Wallet[]
   subscriptions    Subscription[]
-  notificationLogs  NotificationLog[]
+  notificationLogs NotificationLog[]
 }
 
 model Subscription {

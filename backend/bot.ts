@@ -28,7 +28,7 @@ export type MyContext = Context & SessionFlavor<any> & ConversationFlavor
 
 export type MyConversation = Conversation<MyContext>
 
-const token = process.env.BOT_TOKEN
+const token = Bun.env.BOT_TOKEN
 if (!token) throw new Error("BOT_TOKEN is unset")
 ;(async () => {
   const bot = new Bot<MyContext>(token)

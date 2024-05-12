@@ -4,10 +4,18 @@ import {
   unpackAccount,
 } from "@solana/spl-token"
 import { Connection, PublicKey } from "@solana/web3.js"
+import { Api } from "grammy"
+
+import { prisma } from "./lib/db"
 
 if (!Bun.env.HELIUS_API_KEY) {
   throw new Error("HELIUS_API_KEY env var is required")
 }
+
+const token = Bun.env.BOT_TOKEN
+if (!token) throw new Error("BOT_TOKEN is unset")
+
+const tgApi = new Api(token)
 
 const rpc = `https://mainnet.helius-rpc.com/?api-key=${Bun.env.HELIUS_API_KEY}`
 
@@ -21,6 +29,9 @@ const writer = logFile.writer()
 
 ;(async () => {
   try {
+    const tokenListRes = await fetch("https://cache.jup.ag/tokens")
+    const tokenList = await tokenListRes.json()
+
     const conn = new Connection(rpc, "confirmed")
 
     const socket = new WebSocket(atlasWS)
@@ -125,7 +136,7 @@ const writer = logFile.writer()
               ixs: approveIxs.map((i) => i.parsed.info),
             })
 
-            let approvedAccounts: any[] = []
+            // let approvedAccounts: any[] = []
 
             for (const ix of approveIxs) {
               const ixParsed = ix.parsed.info
@@ -142,25 +153,101 @@ const writer = logFile.writer()
                 tokenAccountInfo
               )
 
+              const token = tokenList.find(
+                (t: any) => t.address === tokenAccount.mint.toBase58()
+              )
+
               console.log(
-                `${tokenAccount.mint.toBase58()}: ${
-                  ixParsed.amount
+                `${token?.symbol || tokenAccount.mint.toBase58()}: ${
+                  token
+                    ? ixParsed.amount / 10 ** token?.decimals
+                    : `${ixParsed.amount} (ignoring decimals)`
                 } delegated to ${tokenAccount.delegate?.toBase58()}`,
                 tokenAccount
               )
 
-              approvedAccounts.push({
-                mint: tokenAccount.mint.toBase58(),
-                owner: tokenAccount.owner.toBase58(),
-                amount: ixParsed.amount,
-                address: tokenAccount.address.toBase58(),
-                delegate: tokenAccount.delegate
-                  ? tokenAccount.delegate.toBase58()
-                  : null,
+              const user = await prisma.user.findFirst({
+                where: {
+                  wallets: {
+                    some: {
+                      tokenAccount: {
+                        some: {
+                          address: tokenAccount.address.toBase58(),
+                        },
+                      },
+                    },
+                  },
+                },
+                include: {
+                  wallets: {
+                    where: {
+                      tokenAccount: {
+                        some: {
+                          address: tokenAccount.address.toBase58(),
+                        },
+                      },
+                    },
+                  },
+                },
               })
+
+              if (!user) {
+                console.log("User not found")
+                continue
+              }
+
+              if (!user.telegramId) {
+                console.log("User has no telegram id")
+                continue
+              }
+
+              const message = `Delegated ${
+                token?.symbol || tokenAccount.mint.toBase58()
+              }: ${
+                token
+                  ? ixParsed.amount / 10 ** token?.decimals
+                  : `${ixParsed.amount} (ignoring decimals)`
+              } to ${tokenAccount.delegate?.toBase58()}\nAccount: ${
+                // user.wallets[0].address
+                tokenAccount.address.toBase58()
+              }\n\nTx: [${
+                parsedEvent.params.result.signature
+              }](https://solana.fm/tx/${
+                parsedEvent.params.result.signature
+              }) (Solana FM)`
+
+              await tgApi.sendMessage(user.telegramId, message, {
+                parse_mode: "Markdown",
+              })
+
+              // await tgApi.sendMessage(Number(Bun.env.TG_ID), message, {
+              //   parse_mode: "Markdown",
+              // })
+
+              await prisma.notificationLog.create({
+                data: {
+                  message,
+                  wasSuccessful: true,
+                  user: {
+                    connect: {
+                      id: user.id,
+                    },
+                  },
+                },
+              })
+
+              // approvedAccounts.push({
+              //   mint: tokenAccount.mint.toBase58(),
+              //   owner: tokenAccount.owner.toBase58(),
+              //   amount: ixParsed.amount,
+              //   address: tokenAccount.address.toBase58(),
+              //   delegate: tokenAccount.delegate
+              //     ? tokenAccount.delegate.toBase58()
+              //     : null,
+              // })
             }
 
-            console.log(approvedAccounts)
+            // console.log(approvedAccounts)
           }
         }
       } catch (e) {
