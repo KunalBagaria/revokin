@@ -8,14 +8,16 @@ datasource db {
 }
 
 model User {
-  id               String            @id @default(uuid())
-  name             String
-  createdAt        DateTime          @default(now())
-  telegramId       Int?              @unique
-  tgConnectCode    String            @unique
-  wallets          Wallet[]
-  subscriptions    Subscription[]
-  notificationLogs NotificationLog[]
+  id                    String            @id @default(uuid())
+  name                  String
+  email                 String
+  telegramId            Int?
+  tgConnectCode         String?
+  hasActiveSubscription Boolean           @default(false)
+  createdAt             DateTime          @default(now())
+  wallets               Wallet[]
+  subscriptions         Subscription[]
+  notificationLogs       NotificationLog[]
 }
 
 model Subscription {
@@ -31,7 +33,6 @@ model Subscription {
 model Wallet {
   id           String         @id @default(uuid())
   address      String
-  isMainWallet Boolean        @default(false)
   userId       String
   user         User           @relation(fields: [userId], references: [id])
   tokenAccount TokenAccount[]
