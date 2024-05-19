@@ -12,7 +12,7 @@ model User {
   name                  String
   email                 String
   telegramId            Int?
-  tgConnectCode         String?
+  tgConnectCode         String
   hasActiveSubscription Boolean           @default(false)
   createdAt             DateTime          @default(now())
   wallets               Wallet[]

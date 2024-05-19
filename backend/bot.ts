@@ -21,6 +21,7 @@ import {
   startController,
   startConversation,
 } from "./controllers/startController"
+import { addWallet, addWalletConversation } from "./controllers/addWalletController"
 
 configDotenv()
 
@@ -71,8 +72,10 @@ if (!token) throw new Error("BOT_TOKEN is unset")
   bot.use(conversations())
 
   bot.use(createConversation(startConversation, "start"))
+  bot.use(createConversation(addWallet, "add_wallet"))
 
   bot.command("start", startController)
+  bot.command("add_wallet", addWalletConversation)
 
   process.on("SIGINT", () => bot.stop())
   process.on("SIGTERM", () => bot.stop())

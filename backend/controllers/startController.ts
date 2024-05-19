@@ -7,6 +7,30 @@ export const startController = async (ctx: MyContext) => {
   await ctx.conversation.enter("start");
 };
 
+export const sendCatalogue = async (ctx: MyContext) => {
+  await ctx.reply(
+    `You can now receive notifications for $5/month or $50/year.`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "$5/month",
+              url: "https://buy.stripe.com/4gw3g81bD4sPgmscMP",
+            },
+          ],
+          [
+            {
+              text: "$50/year",
+              url: "https://buy.stripe.com/bIYdUMdYpcZl5HOeUW",
+            },
+          ],
+        ],
+      },
+    }
+  );
+}
+
 export const startConversation = async (
   conversation: MyConversation,
   ctx: MyContext
@@ -14,30 +38,6 @@ export const startConversation = async (
   if (!ctx.chat?.id) {
     await ctx.reply("Chat not found!");
     return;
-  }
-
-  async function sendCatalogue() {
-    await ctx.reply(
-      `You can now receive notifications for $5/month or $50/year.`,
-      {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: "$5/month",
-                url: "https://buy.stripe.com/4gw3g81bD4sPgmscMP",
-              },
-            ],
-            [
-              {
-                text: "$50/year",
-                url: "https://buy.stripe.com/bIYdUMdYpcZl5HOeUW",
-              },
-            ],
-          ],
-        },
-      }
-    );
   }
 
   try {
@@ -53,7 +53,7 @@ export const startConversation = async (
     }
 
     if (user && !user.hasActiveSubscription) {
-      await sendCatalogue();
+      await sendCatalogue(ctx);
       return;
     }
 
@@ -140,7 +140,6 @@ export const startConversation = async (
         },
         data: {
           telegramId: ctx.chat.id,
-          tgConnectCode: null, // Clear the code after successful verification
         },
       });
 
@@ -149,7 +148,7 @@ export const startConversation = async (
         `Your email has been successfully connected to your Telegram account on Revokin! 🎉`
       );
 
-      await sendCatalogue();
+      await sendCatalogue(ctx);
     }
 
   } catch (error) {
