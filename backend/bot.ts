@@ -71,6 +71,7 @@ if (!token) throw new Error("BOT_TOKEN is unset")
   bot.use(conversations())
 
   bot.use(createConversation(startConversation, "start"))
+
   bot.command("start", startController)
 
   process.on("SIGINT", () => bot.stop())
