@@ -1,11 +1,13 @@
-import crypto from "crypto";
-import { prisma } from "../lib/db";
-import type { Message } from "grammy/types";
-import type { MyContext, MyConversation } from "../bot";
+import crypto from "crypto"
+import type { Message } from "grammy/types"
+
+import type { MyContext, MyConversation } from "../bot"
+import { prisma } from "../lib/db"
+import { isSubActive } from "../lib/utils"
 
 export const startController = async (ctx: MyContext) => {
-  await ctx.conversation.enter("start");
-};
+  await ctx.conversation.enter("start")
+}
 
 export const sendCatalogue = async (ctx: MyContext) => {
   await ctx.reply(
@@ -28,7 +30,7 @@ export const sendCatalogue = async (ctx: MyContext) => {
         ],
       },
     }
-  );
+  )
 }
 
 export const startConversation = async (
@@ -36,8 +38,8 @@ export const startConversation = async (
   ctx: MyContext
 ) => {
   if (!ctx.chat?.id) {
-    await ctx.reply("Chat not found!");
-    return;
+    await ctx.reply("Chat not found!")
+    return
   }
 
   try {
@@ -45,16 +47,23 @@ export const startConversation = async (
       where: {
         telegramId: ctx.chat.id,
       },
-    });
+    })
 
-    if (user && user.hasActiveSubscription) {
-      await ctx.reply("You are already subscribed to Revokin! 🎉");
-      return;
+    if (
+      user &&
+      user.subscriptionEndDate &&
+      isSubActive(user.subscriptionEndDate)
+    ) {
+      await ctx.reply("You are already subscribed to Revokin! 🎉")
+      return
     }
 
-    if (user && !user.hasActiveSubscription) {
-      await sendCatalogue(ctx);
-      return;
+    if (
+      user &&
+      (!user.subscriptionEndDate || !isSubActive(user.subscriptionEndDate))
+    ) {
+      await sendCatalogue(ctx)
+      return
     }
 
     if (!user) {
@@ -65,38 +74,44 @@ export const startConversation = async (
             force_reply: true,
           },
         }
-      );
+      )
 
-      const emailCtx = await conversation.wait();
+      const emailCtx = await conversation.wait()
 
       if (!emailCtx?.message?.text) {
-        throw new Error("Message not found!");
+        throw new Error("Message not found!")
       }
 
-      const email = (emailCtx.message as Message).text;
+      const email = (emailCtx.message as Message).text
 
       if (!email) {
-        await ctx.reply("Email not found!");
-        return;
+        await ctx.reply("Email not found!")
+        return
       }
 
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(email)) {
-        await ctx.reply("Invalid email! Please try again.");
-        return;
+        await ctx.reply("Invalid email! Please try again.")
+        return
       }
 
-      const randomCode = crypto.randomBytes(16).toString("hex");
-
-      await prisma.user.create({
-        data: {
-          name: ctx.chat.first_name && ctx.chat.last_name ? `${ctx.chat.first_name} ${ctx.chat.last_name}` : "Unknown",
+      const userWithEmail = await prisma.user.findFirst({
+        where: {
           email: email,
-          tgConnectCode: randomCode,
         },
-      });
+      })
 
-      // todo: send email with code
+      if (userWithEmail) {
+        await ctx.reply(
+          `Oops, it looks like ${email} is already connected to another Telegram account. Please try again!`
+        )
+        return
+      }
+
+      // const randomCode = crypto.randomBytes(16).toString("hex")
+      const randomCode = "haha"
+
+      // TODO: send email with code
       // sendEmail(email, randomCode);
 
       await ctx.reply(
@@ -106,52 +121,49 @@ export const startConversation = async (
             force_reply: true,
           },
         }
-      );
+      )
 
-      const codeCtx = await conversation.wait();
+      const codeCtx = await conversation.wait()
 
       if (!codeCtx?.message?.text) {
-        throw new Error("Message not found!");
+        throw new Error("Message not found!")
       }
 
-      const code = (codeCtx.message as Message).text;
+      const code = (codeCtx.message as Message).text
 
       if (!code) {
-        await ctx.reply("Code not found!");
-        return;
+        await ctx.reply("Code not found!")
+        return
       }
 
-      const verifiedUser = await prisma.user.findFirst({
-        where: {
-          tgConnectCode: code,
-        },
-      });
+      console.log("Code: ", code)
 
-      if (!verifiedUser) {
+      if (code !== randomCode) {
         await ctx.reply(
-          `Oops, we couldn't find a code matching ${code}. Please try again!`
-        );
-        return;
+          `Oops, that is an invalid verification code. Please try again by using the \`start\` command.`
+        )
+        return
       }
 
-      await prisma.user.update({
-        where: {
-          id: verifiedUser.id,
-        },
+      await prisma.user.create({
         data: {
+          name:
+            ctx.chat.first_name && ctx.chat.last_name
+              ? `${ctx.chat.first_name} ${ctx.chat.last_name}`
+              : "Unknown",
+          email: email,
           telegramId: ctx.chat.id,
+          tgConnectCode: randomCode,
         },
-      });
+      })
 
-      // send email confirmation message
       await ctx.reply(
         `Your email has been successfully connected to your Telegram account on Revokin! 🎉`
-      );
+      )
 
-      await sendCatalogue(ctx);
+      await sendCatalogue(ctx)
     }
-
   } catch (error) {
-    console.error("Error in startConversation: ", error);
+    console.error("Error in startConversation: ", error)
   }
-};
+}

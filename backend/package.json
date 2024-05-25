@@ -2,6 +2,14 @@
   "name": "backend",
   "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "dev:api": "bun --watch api.ts",
+    "dev:bot": "DEBUG=\"grammy*\" bun --watch bot.ts",
+    "dev:indexer": "bun --watch indexer.ts",
+    "start:api": "node api.js",
+    "start:bot": "node bot.js",
+    "start:indexer": "node indexer.js"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "prisma": "^5.13.0"
@@ -17,6 +25,8 @@
     "@grammyjs/transformer-throttler": "^1.2.1",
     "@solana/spl-token": "^0.4.6",
     "@solana/web3.js": "^1.91.8",
-    "grammy": "^1.23.0"
+    "elysia": "^1.0.21",
+    "grammy": "^1.23.0",
+    "stripe": "^15.8.0"
   }
 }

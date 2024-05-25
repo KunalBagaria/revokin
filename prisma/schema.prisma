@@ -8,51 +8,65 @@ datasource db {
 }
 
 model User {
-  id                    String            @id @default(uuid())
-  name                  String
-  email                 String
-  telegramId            Int?
-  tgConnectCode         String
-  hasActiveSubscription Boolean           @default(false)
-  createdAt             DateTime          @default(now())
-  wallets               Wallet[]
-  subscriptions         Subscription[]
-  notificationLogs       NotificationLog[]
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name                String
+  email               String    @unique
+  telegramId          Int?
+  tgConnectCode       String
+  subscriptionEndDate DateTime?
+  maxActiveWallets    Int?
+
+  wallets          Wallet[]
+  subscriptions    Subscription[]
+  notificationLogs NotificationLog[]
 }
 
 model Subscription {
   id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  stripeId  String
-  isActive  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  userId   String
+  stripeId String
+  isActive Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Wallet {
-  id           String         @id @default(uuid())
-  address      String
-  userId       String
-  user         User           @relation(fields: [userId], references: [id])
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  address String
+  userId  String
+  user    User   @relation(fields: [userId], references: [id])
+
   tokenAccount TokenAccount[]
 }
 
 model TokenAccount {
-  id          String   @id @default(uuid())
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   address     String
-  isDelegated Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  walletId    String
-  wallet      Wallet   @relation(fields: [walletId], references: [id])
+  isDelegated Boolean @default(false)
+
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id])
 }
 
 model NotificationLog {
-  id            String   @id @default(uuid())
+  id         String   @id @default(uuid())
+  created_at DateTime @default(now())
+
   message       String
-  sentAt        DateTime @default(now())
   wasSuccessful Boolean
   userId        String
-  user          User     @relation(fields: [userId], references: [id])
+
+  user User @relation(fields: [userId], references: [id])
 }
