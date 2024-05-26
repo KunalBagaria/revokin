@@ -1,20 +1,24 @@
 import { TOKEN_PROGRAM_ID, unpackAccount } from "@solana/spl-token"
 import { Connection, PublicKey } from "@solana/web3.js"
+import { configDotenv } from "dotenv"
 import { Api } from "grammy"
+import WebSocket from "ws"
 
 import { rpc } from "./lib/constants"
 import { prisma } from "./lib/db"
 
-if (!Bun.env.HELIUS_API_KEY) {
+configDotenv()
+
+if (!process.env.HELIUS_API_KEY) {
   throw new Error("HELIUS_API_KEY env var is required")
 }
 
-const token = Bun.env.BOT_TOKEN
+const token = process.env.BOT_TOKEN
 if (!token) throw new Error("BOT_TOKEN is unset")
 
 const tgApi = new Api(token)
 
-const atlasWS = `wss://atlas-mainnet.helius-rpc.com?api-key=${Bun.env.HELIUS_API_KEY}`
+const atlasWS = `wss://atlas-mainnet.helius-rpc.com?api-key=${process.env.HELIUS_API_KEY}`
 
 ;(async () => {
   try {
@@ -22,6 +26,18 @@ const atlasWS = `wss://atlas-mainnet.helius-rpc.com?api-key=${Bun.env.HELIUS_API
     const tokenList = await tokenListRes.json()
 
     const conn = new Connection(rpc, "confirmed")
+
+    const tokenAccountsToSubscribe = await prisma.tokenAccount.findMany({
+      where: {
+        wallet: {
+          user: {
+            subscriptionEndDate: {
+              gt: new Date(),
+            },
+          },
+        },
+      },
+    })
 
     const socket = new WebSocket(atlasWS)
 
@@ -39,7 +55,7 @@ const atlasWS = `wss://atlas-mainnet.helius-rpc.com?api-key=${Bun.env.HELIUS_API
               failed: false,
               accountRequired: [TOKEN_PROGRAM_ID],
               accountExclude: ["SAGE2HAwep459SNq61LHvjxPk4pLPEJLoMETef7f7EE"],
-              // accountsInclude: [""], // TOKEN ACCOUNTS
+              accountsInclude: tokenAccountsToSubscribe.map((ta) => ta.address),
             },
             {
               commitment: "processed",
@@ -116,16 +132,10 @@ const atlasWS = `wss://atlas-mainnet.helius-rpc.com?api-key=${Bun.env.HELIUS_API
 
           if (run) {
             console.log({
-              // initIxsNumber,
-              // closeIxsNumber,
               approveIxsNumber,
-              // revokeIxsNumber,
-              // parsedEvent: parsedEvent.params.result.transaction.meta,
               sig: parsedEvent.params.result.signature,
-              ixs: approveIxs.map((i) => i.parsed.info),
+              ixs: approveIxs.map((i: any) => i.parsed.info),
             })
-
-            // let approvedAccounts: any[] = []
 
             for (const ix of approveIxs) {
               const ixParsed = ix.parsed.info
@@ -197,8 +207,8 @@ const atlasWS = `wss://atlas-mainnet.helius-rpc.com?api-key=${Bun.env.HELIUS_API
                   ? ixParsed.amount / 10 ** token?.decimals
                   : `${ixParsed.amount} (ignoring decimals)`
               } to ${tokenAccount.delegate?.toBase58()}\nAccount: ${
-                // user.wallets[0].address
-                tokenAccount.address.toBase58()
+                user.wallets[0].address
+                // tokenAccount.address.toBase58()
               }\n\nTx: [${
                 parsedEvent.params.result.signature
               }](https://solana.fm/tx/${
@@ -209,7 +219,7 @@ const atlasWS = `wss://atlas-mainnet.helius-rpc.com?api-key=${Bun.env.HELIUS_API
                 parse_mode: "Markdown",
               })
 
-              // await tgApi.sendMessage(Number(Bun.env.TG_ID), message, {
+              // await tgApi.sendMessage(Number(process.env.TG_ID), message, {
               //   parse_mode: "Markdown",
               // })
 
@@ -233,19 +243,7 @@ const atlasWS = `wss://atlas-mainnet.helius-rpc.com?api-key=${Bun.env.HELIUS_API
                   isDelegated: true,
                 },
               })
-
-              // approvedAccounts.push({
-              //   mint: tokenAccount.mint.toBase58(),
-              //   owner: tokenAccount.owner.toBase58(),
-              //   amount: ixParsed.amount,
-              //   address: tokenAccount.address.toBase58(),
-              //   delegate: tokenAccount.delegate
-              //     ? tokenAccount.delegate.toBase58()
-              //     : null,
-              // })
             }
-
-            // console.log(approvedAccounts)
           }
         }
       } catch (e) {
