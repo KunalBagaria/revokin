@@ -53,7 +53,7 @@ model TokenAccount {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  address     String
+  address     String  @unique
   isDelegated Boolean @default(false)
 
   walletId String

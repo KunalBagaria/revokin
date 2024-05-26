@@ -18,10 +18,13 @@ import {
 } from "grammy"
 
 import {
+  addWallet,
+  addWalletConversation,
+} from "./controllers/addWalletController"
+import {
   startController,
   startConversation,
 } from "./controllers/startController"
-import { addWallet, addWalletConversation } from "./controllers/addWalletController"
 
 configDotenv()
 

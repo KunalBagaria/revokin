@@ -1,11 +1,8 @@
-import {
-  TOKEN_2022_PROGRAM_ID,
-  TOKEN_PROGRAM_ID,
-  unpackAccount,
-} from "@solana/spl-token"
+import { TOKEN_PROGRAM_ID, unpackAccount } from "@solana/spl-token"
 import { Connection, PublicKey } from "@solana/web3.js"
 import { Api } from "grammy"
 
+import { rpc } from "./lib/constants"
 import { prisma } from "./lib/db"
 
 if (!Bun.env.HELIUS_API_KEY) {
@@ -17,15 +14,7 @@ if (!token) throw new Error("BOT_TOKEN is unset")
 
 const tgApi = new Api(token)
 
-const rpc = `https://mainnet.helius-rpc.com/?api-key=${Bun.env.HELIUS_API_KEY}`
-
 const atlasWS = `wss://atlas-mainnet.helius-rpc.com?api-key=${Bun.env.HELIUS_API_KEY}`
-
-const logFile = Bun.file("logs.json", {
-  type: "application/json",
-})
-
-const writer = logFile.writer()
 
 ;(async () => {
   try {
@@ -233,6 +222,15 @@ const writer = logFile.writer()
                       id: user.id,
                     },
                   },
+                },
+              })
+
+              await prisma.tokenAccount.update({
+                where: {
+                  address: tokenAccount.address.toBase58(),
+                },
+                data: {
+                  isDelegated: true,
                 },
               })
 

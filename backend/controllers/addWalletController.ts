@@ -1,9 +1,13 @@
-import { prisma } from "../lib/db";
-import type { MyContext, MyConversation } from "../bot";
-import { sendCatalogue } from "./startController";
+import { Connection } from "@solana/web3.js"
+
+import type { MyContext, MyConversation } from "../bot"
+import { rpc } from "../lib/constants"
+import { prisma } from "../lib/db"
+import { getTokenAccounts, isSubActive } from "../lib/utils"
+import { sendCatalogue } from "./startController"
 
 export const addWalletConversation = async (ctx: MyContext) => {
-  await ctx.conversation.enter("add_wallet");
+  await ctx.conversation.enter("add_wallet")
 }
 
 export const addWallet = async (
@@ -11,8 +15,8 @@ export const addWallet = async (
   ctx: MyContext
 ) => {
   if (!ctx.chat?.id) {
-    await ctx.reply("Chat not found!");
-    return;
+    await ctx.reply("Chat not found!")
+    return
   }
 
   try {
@@ -20,17 +24,20 @@ export const addWallet = async (
       where: {
         telegramId: ctx.chat.id,
       },
-    });
+    })
 
     if (!user) {
-      await ctx.reply("You need to start the bot first, using the /start command.");
-      return;
+      await ctx.reply(
+        "You need to start the bot first, using the /start command."
+      )
+      return
     }
-
-    if (!user.hasActiveSubscription) {
-      await ctx.reply("You need to subscribe to Revokin first, before adding a wallet.");
-      await sendCatalogue(ctx);
-      return;
+    if (
+      user &&
+      (!user.subscriptionEndDate || !isSubActive(user.subscriptionEndDate))
+    ) {
+      await sendCatalogue(ctx)
+      return
     }
 
     await ctx.reply(
@@ -40,15 +47,15 @@ export const addWallet = async (
           force_reply: true,
         },
       }
-    );
+    )
 
-    const walletCtx = await conversation.wait();
+    const walletCtx = await conversation.wait()
 
-    const walletAddress = walletCtx.message?.text;
+    const walletAddress = walletCtx.message?.text
 
     if (!walletAddress) {
-      await ctx.reply("Invalid wallet address provided.");
-      return;
+      await ctx.reply("Invalid wallet address provided.")
+      return
     }
 
     const wallet = await prisma.wallet.create({
@@ -56,12 +63,33 @@ export const addWallet = async (
         address: walletAddress,
         userId: user.id,
       },
-    });
+    })
 
-    await ctx.reply("Wallet added successfully! 🎉");
+    const conn = new Connection(rpc)
 
+    const tokenListRes = await fetch("https://cache.jup.ag/tokens")
+    const tokenList = await tokenListRes.json()
+
+    const tokensFiltered = await getTokenAccounts(
+      conn,
+      walletAddress,
+      tokenList
+    )
+
+    await prisma.tokenAccount.createMany({
+      data: tokensFiltered.map((token) => {
+        return {
+          walletId: wallet.id,
+          address: token.ata,
+          isDelegated: !!token.delegate,
+        }
+      }),
+      skipDuplicates: true,
+    })
+
+    await ctx.reply("Wallet added successfully! 🎉")
   } catch (error) {
-    console.error(error);
-    await ctx.reply("An error occurred while processing your request.");
+    console.error(error)
+    await ctx.reply("An error occurred while processing your request.")
   }
 }
