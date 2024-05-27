@@ -6,11 +6,11 @@ import { prisma } from "../lib/db"
 import { getTokenAccounts, isSubActive } from "../lib/utils"
 import { sendCatalogue } from "./startController"
 
-export const addWalletConversation = async (ctx: MyContext) => {
+export const addWalletController = async (ctx: MyContext) => {
   await ctx.conversation.enter("add_wallet")
 }
 
-export const addWallet = async (
+export const addWalletConversation = async (
   conversation: MyConversation,
   ctx: MyContext
 ) => {

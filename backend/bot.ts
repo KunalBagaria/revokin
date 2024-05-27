@@ -18,7 +18,7 @@ import {
 } from "grammy"
 
 import {
-  addWallet,
+  addWalletController,
   addWalletConversation,
 } from "./controllers/addWalletController"
 import {
@@ -75,10 +75,21 @@ if (!token) throw new Error("BOT_TOKEN is unset")
   bot.use(conversations())
 
   bot.use(createConversation(startConversation, "start"))
-  bot.use(createConversation(addWallet, "add_wallet"))
+  bot.use(createConversation(addWalletConversation, "add_wallet"))
 
   bot.command("start", startController)
-  bot.command("add_wallet", addWalletConversation)
+  bot.command("add_wallet", addWalletController)
+
+  await bot.api.setMyCommands([
+    {
+      command: "start",
+      description: "Setup your Revokin",
+    },
+    {
+      command: "add_wallet",
+      description: "Add a wallet to receive notifications",
+    },
+  ])
 
   process.on("SIGINT", () => bot.stop())
   process.on("SIGTERM", () => bot.stop())

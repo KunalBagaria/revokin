@@ -12,7 +12,8 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "prisma": "^5.13.0"
+    "prisma": "^5.13.0",
+    "tsx": "^4.11.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -27,6 +28,8 @@
     "@solana/web3.js": "^1.91.8",
     "elysia": "^1.0.21",
     "grammy": "^1.23.0",
-    "stripe": "^15.8.0"
+    "resend": "^3.2.0",
+    "stripe": "^15.8.0",
+    "ws": "^8.17.0"
   }
 }

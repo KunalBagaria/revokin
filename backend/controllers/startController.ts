@@ -3,6 +3,7 @@ import type { Message } from "grammy/types"
 
 import type { MyContext, MyConversation } from "../bot"
 import { prisma } from "../lib/db"
+import { resend } from "../lib/resend"
 import { isSubActive } from "../lib/utils"
 
 export const startController = async (ctx: MyContext) => {
@@ -32,6 +33,8 @@ export const sendCatalogue = async (ctx: MyContext) => {
     }
   )
 }
+
+let i = 0
 
 export const startConversation = async (
   conversation: MyConversation,
@@ -109,10 +112,19 @@ export const startConversation = async (
       }
 
       // const randomCode = crypto.randomBytes(16).toString("hex")
-      const randomCode = "haha"
+      // 6 digit code
+      const randomCode = Math.floor(100000 + Math.random() * 900000).toString()
+      i++
+      console.log("Random code: ", randomCode, i)
 
-      // TODO: send email with code
-      // sendEmail(email, randomCode);
+      // const randomCode = "haha"
+
+      // await resend.emails.send({
+      //   from: "Revokin <contact@revokin.com>",
+      //   to: [email],
+      //   subject: "Revokin Verification Code",
+      //   text: `Your verification code is: ${randomCode}`,
+      // })
 
       await ctx.reply(
         `We have sent a verification code to your email. Please enter the code here: `,
@@ -136,11 +148,14 @@ export const startConversation = async (
         return
       }
 
-      console.log("Code: ", code)
+      console.log("Code: ", code, i)
 
       if (code !== randomCode) {
         await ctx.reply(
-          `Oops, that is an invalid verification code. Please try again by using the \`start\` command.`
+          `Oops, that is an invalid verification code. Please try again by using the /start command.`,
+          {
+            parse_mode: "Markdown",
+          }
         )
         return
       }
