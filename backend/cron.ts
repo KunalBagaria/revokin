@@ -12,7 +12,7 @@ if (!process.env.HELIUS_API_KEY) {
 }
 
 ;(async () => {
-  console.log("Hello")
+  console.log("Running Cron")
 
   await prisma.tokenAccount.deleteMany({
     where: {

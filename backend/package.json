@@ -6,12 +6,16 @@
     "dev:api": "bun --watch api.ts",
     "dev:bot": "DEBUG=\"grammy*\" bun --watch bot.ts",
     "dev:indexer": "bun --watch indexer.ts",
-    "start:api": "node api.js",
-    "start:bot": "node bot.js",
-    "start:indexer": "node indexer.js"
+    "start:api": "bun api.ts",
+    "start:bot": "DEBUG=\"grammy*\" bun bot.ts",
+    "start:indexer": "bun indexer.ts",
+    "start": "concurrently -n api,bot,indexer -c green,blue,magenta \"npm run start:api\" \"npm run start:bot\" \"npm run start:indexer\"",
+    "dev": "concurrently -n api,bot,indexer -c green,blue,magenta \"npm run dev:api\" \"npm run dev:bot\" \"npm run dev:indexer\"",
+    "cron": "bun cron.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "concurrently": "^8.2.2",
     "prisma": "^5.13.0",
     "tsx": "^4.11.0"
   },

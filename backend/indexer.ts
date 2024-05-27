@@ -53,9 +53,9 @@ const atlasWS = `wss://atlas-mainnet.helius-rpc.com?api-key=${process.env.HELIUS
             {
               vote: false,
               failed: false,
+              accountInclude: tokenAccountsToSubscribe.map((ta) => ta.address),
               accountRequired: [TOKEN_PROGRAM_ID],
               accountExclude: ["SAGE2HAwep459SNq61LHvjxPk4pLPEJLoMETef7f7EE"],
-              accountsInclude: tokenAccountsToSubscribe.map((ta) => ta.address),
             },
             {
               commitment: "processed",
@@ -74,7 +74,7 @@ const atlasWS = `wss://atlas-mainnet.helius-rpc.com?api-key=${process.env.HELIUS
     socket.onmessage = async (event) => {
       // console.log(event.data)
       try {
-        const parsedEvent = JSON.parse(event.data)
+        const parsedEvent = JSON.parse(event.data.toString())
 
         if (
           parsedEvent.method === "transactionNotification" &&
@@ -142,6 +142,12 @@ const atlasWS = `wss://atlas-mainnet.helius-rpc.com?api-key=${process.env.HELIUS
               const tokenAccountInfo = await conn.getAccountInfo(
                 new PublicKey(ixParsed.source)
               )
+
+              if (tokenAccountsToSubscribe.includes(ixParsed.source)) {
+                console.log("In tokenAccountsToSubscribe")
+              } else {
+                console.log("Not in tokenAccountsToSubscribe")
+              }
 
               if (!tokenAccountInfo) {
                 return

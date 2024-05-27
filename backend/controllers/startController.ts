@@ -111,20 +111,19 @@ export const startConversation = async (
         return
       }
 
-      // const randomCode = crypto.randomBytes(16).toString("hex")
-      // 6 digit code
-      const randomCode = Math.floor(100000 + Math.random() * 900000).toString()
+      const random = await conversation.random()
+      const randomCode = Math.floor(100000 + random * 900000).toString()
       i++
       console.log("Random code: ", randomCode, i)
 
-      // const randomCode = "haha"
-
-      // await resend.emails.send({
-      //   from: "Revokin <contact@revokin.com>",
-      //   to: [email],
-      //   subject: "Revokin Verification Code",
-      //   text: `Your verification code is: ${randomCode}`,
-      // })
+      await conversation.external(async () => {
+        await resend.emails.send({
+          from: "Revokin <contact@revokin.com>",
+          to: [email],
+          subject: "Revokin Verification Code",
+          text: `Your verification code is: ${randomCode}`,
+        })
+      })
 
       await ctx.reply(
         `We have sent a verification code to your email. Please enter the code here: `,
