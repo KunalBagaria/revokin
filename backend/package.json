@@ -18,7 +18,7 @@
     "@types/bun": "latest",
     "@types/node-cron": "^3.0.11",
     "concurrently": "^8.2.2",
-    "prisma": "^5.13.0",
+    "prisma": "^5.15.0",
     "tsx": "^4.11.0"
   },
   "peerDependencies": {
@@ -30,6 +30,7 @@
     "@grammyjs/ratelimiter": "^1.2.0",
     "@grammyjs/runner": "^2.0.3",
     "@grammyjs/transformer-throttler": "^1.2.1",
+    "@prisma/client": "5.15.0",
     "@solana/spl-token": "^0.4.6",
     "@solana/web3.js": "^1.91.8",
     "dotenv": "^16.4.5",
