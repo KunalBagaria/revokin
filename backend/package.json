@@ -31,6 +31,7 @@
     "@grammyjs/transformer-throttler": "^1.2.1",
     "@solana/spl-token": "^0.4.6",
     "@solana/web3.js": "^1.91.8",
+    "dotenv": "^16.4.5",
     "elysia": "^1.0.21",
     "grammy": "^1.23.0",
     "node-cron": "^3.0.3",
