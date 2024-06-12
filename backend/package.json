@@ -5,10 +5,10 @@
   "scripts": {
     "dev:api": "bun --watch api.ts",
     "dev:bot": "DEBUG=\"grammy*\" bun --watch bot.ts",
-    "dev:indexer": "bun --watch indexer.ts",
+    "dev:indexer": "tsx --watch indexer.ts",
     "start:api": "bun api.ts",
     "start:bot": "DEBUG=\"grammy*\" bun bot.ts",
-    "start:indexer": "bun indexer.ts",
+    "start:indexer": "tsx indexer.ts",
     "start": "concurrently -n api,bot,indexer,cron -c green,blue,magenta,red \"npm run start:api\" \"npm run start:bot\" \"npm run start:indexer\" \"npm run cron\"",
     "dev": "concurrently -n api,bot,indexer,cron -c green,blue,magenta,red \"npm run dev:api\" \"npm run dev:bot\" \"npm run dev:indexer\" \"npm run cron\"",
     "cron": "tsx cron.ts",
