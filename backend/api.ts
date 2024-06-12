@@ -130,6 +130,6 @@ new Elysia()
       }
     }
   )
-  .listen(6000)
+  .listen(process.env.PORT || 6000)
 
 console.log("Webhook server running on port 6000")
