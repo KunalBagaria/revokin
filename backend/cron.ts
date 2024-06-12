@@ -1,5 +1,6 @@
 import { Connection } from "@solana/web3.js"
 import { configDotenv } from "dotenv"
+import cron from "node-cron"
 
 import { rpc } from "./lib/constants"
 import { prisma } from "./lib/db"
@@ -11,7 +12,7 @@ if (!process.env.HELIUS_API_KEY) {
   throw new Error("HELIUS_API_KEY env var is required")
 }
 
-;(async () => {
+cron.schedule("0 */6 * * *", async () => {
   console.log("Running Cron")
 
   await prisma.tokenAccount.deleteMany({
@@ -61,4 +62,4 @@ if (!process.env.HELIUS_API_KEY) {
       skipDuplicates: true,
     })
   }
-})()
+})
