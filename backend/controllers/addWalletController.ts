@@ -58,6 +58,17 @@ export const addWalletConversation = async (
       return
     }
 
+    const existingWallet = await prisma.wallet.findFirst({
+      where: {
+        address: walletAddress,
+      },
+    })
+
+    if (existingWallet) {
+      await ctx.reply("Wallet already exists.")
+      return
+    }
+
     const wallet = await prisma.wallet.create({
       data: {
         address: walletAddress,
