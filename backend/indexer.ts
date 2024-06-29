@@ -1,3 +1,4 @@
+import type { TokenAccount } from "@prisma/client"
 import { TOKEN_PROGRAM_ID, unpackAccount } from "@solana/spl-token"
 import { Connection, PublicKey } from "@solana/web3.js"
 import { configDotenv } from "dotenv"
@@ -19,6 +20,74 @@ if (!token) throw new Error("BOT_TOKEN is unset")
 const tgApi = new Api(token)
 
 const atlasWS = `wss://atlas-mainnet.helius-rpc.com?api-key=${process.env.HELIUS_API_KEY}`
+const refreshInterval = 1000 * 60 * 1
+
+const fetchTokenAccountsToSubscribe = async () => {
+  return await prisma.tokenAccount.findMany({
+    where: {
+      wallet: {
+        user: {
+          subscriptionEndDate: {
+            gt: new Date(),
+          },
+        },
+      },
+    },
+  })
+}
+
+const subscribe = (
+  tokenAccountsToSubcribe: TokenAccount[],
+  socket: WebSocket
+) => {
+  socket.send(
+    JSON.stringify({
+      jsonrpc: "2.0",
+      id: 420,
+      method: "transactionSubscribe",
+      params: [
+        {
+          vote: false,
+          failed: false,
+          accountInclude: tokenAccountsToSubcribe.map((ta) => ta.address),
+          accountRequired: [TOKEN_PROGRAM_ID],
+          accountExclude: ["SAGE2HAwep459SNq61LHvjxPk4pLPEJLoMETef7f7EE"],
+        },
+        {
+          commitment: "processed",
+          encoding: "jsonParsed",
+          transaction_details: "full",
+          showRewards: true,
+          maxSupportedTransactionVersion: 0,
+        },
+      ],
+    })
+  )
+
+  // console.log({
+  //   jsonrpc: "2.0",
+  //   id: 420,
+  //   method: "transactionSubscribe",
+  //   params: [
+  //     {
+  //       vote: false,
+  //       failed: false,
+  //       accountInclude: tokenAccountsToSubscribe.map((ta) => ta.address),
+  //       accountRequired: [TOKEN_PROGRAM_ID],
+  //       accountExclude: ["SAGE2HAwep459SNq61LHvjxPk4pLPEJLoMETef7f7EE"],
+  //     },
+  //     {
+  //       commitment: "processed",
+  //       encoding: "jsonParsed",
+  //       transaction_details: "full",
+  //       showRewards: true,
+  //       maxSupportedTransactionVersion: 0,
+  //     },
+  //   ],
+  // })
+
+  console.log("send subscribe request")
+}
 
 ;(async () => {
   try {
@@ -27,54 +96,49 @@ const atlasWS = `wss://atlas-mainnet.helius-rpc.com?api-key=${process.env.HELIUS
 
     const conn = new Connection(rpc, "confirmed")
 
-    const tokenAccountsToSubscribe = await prisma.tokenAccount.findMany({
-      where: {
-        wallet: {
-          user: {
-            subscriptionEndDate: {
-              gt: new Date(),
-            },
-          },
-        },
-      },
-    })
+    let tokenAccountsToSubscribe = await fetchTokenAccountsToSubscribe()
+    let latestSubscription: number | null = null
 
     const socket = new WebSocket(atlasWS)
 
     socket.onopen = () => {
       console.log("socket open")
 
-      socket.send(
-        JSON.stringify({
-          jsonrpc: "2.0",
-          id: 420,
-          method: "transactionSubscribe",
-          params: [
-            {
-              vote: false,
-              failed: false,
-              accountInclude: tokenAccountsToSubscribe.map((ta) => ta.address),
-              accountRequired: [TOKEN_PROGRAM_ID],
-              accountExclude: ["SAGE2HAwep459SNq61LHvjxPk4pLPEJLoMETef7f7EE"],
-            },
-            {
-              commitment: "processed",
-              encoding: "jsonParsed",
-              transaction_details: "full",
-              showRewards: true,
-              maxSupportedTransactionVersion: 0,
-            },
-          ],
-        })
-      )
+      subscribe(tokenAccountsToSubscribe, socket)
 
-      console.log(`subscribed to `)
+      setInterval(async () => {
+        tokenAccountsToSubscribe = await fetchTokenAccountsToSubscribe()
+
+        console.log("latestSubscription", latestSubscription)
+
+        if (latestSubscription) {
+          socket.send(
+            JSON.stringify({
+              jsonrpc: "2.0",
+              id: 421,
+              method: "transactionUnsubscribe",
+              params: [latestSubscription],
+            })
+          )
+
+          console.log("send unsubscribe request")
+        }
+
+        subscribe(tokenAccountsToSubscribe, socket)
+      }, refreshInterval)
     }
 
     socket.onmessage = async (event) => {
       // console.log(event.data)
       try {
         const parsedEvent = JSON.parse(event.data.toString())
+
+        console.log(parsedEvent)
+
+        if (parsedEvent.result && typeof parsedEvent.result === "number") {
+          console.log("Subscription ID", parsedEvent.result)
+          latestSubscription = parsedEvent.result
+        }
 
         if (
           parsedEvent.method === "transactionNotification" &&
@@ -118,23 +182,34 @@ const atlasWS = `wss://atlas-mainnet.helius-rpc.com?api-key=${process.env.HELIUS
             }
           }
 
-          const ixsWithInner =
+          const innerIxs =
             parsedEvent.params.result.transaction.meta.innerInstructions
+          const ixs =
+            parsedEvent.params.result.transaction.transaction.message
+              .instructions
 
-          const ixsFlat = ixsWithInner.flatMap((ix: any) => ix.instructions)
+          const allIxs = [...ixs, ...innerIxs.map((ix: any) => ix.instructions)]
 
-          const approveIxs = ixsFlat.filter(
+          const approveIxs = allIxs.filter(
             (ix: any) =>
               ix.programId === TOKEN_PROGRAM_ID.toBase58() &&
               ix.parsed.type === "approve" &&
               Number(ix.parsed.info.amount) > 0
           )
 
+          console.log({
+            approveIxsNumber,
+            sig: parsedEvent.params.result.signature,
+            ixs: approveIxs.map((i: any) => i.parsed.info),
+            allIxs,
+          })
+
           if (run) {
             console.log({
               approveIxsNumber,
               sig: parsedEvent.params.result.signature,
               ixs: approveIxs.map((i: any) => i.parsed.info),
+              allIxs,
             })
 
             for (const ix of approveIxs) {
@@ -224,6 +299,8 @@ const atlasWS = `wss://atlas-mainnet.helius-rpc.com?api-key=${process.env.HELIUS
               await tgApi.sendMessage(user.telegramId, message, {
                 parse_mode: "Markdown",
               })
+
+              console.log("Sent message")
 
               // await tgApi.sendMessage(Number(process.env.TG_ID), message, {
               //   parse_mode: "Markdown",

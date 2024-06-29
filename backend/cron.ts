@@ -13,6 +13,7 @@ if (!process.env.HELIUS_API_KEY) {
 }
 
 cron.schedule("0 */6 * * *", async () => {
+  // ;(async () => {
   console.log("Running Cron")
 
   await prisma.tokenAccount.deleteMany({
@@ -63,3 +64,4 @@ cron.schedule("0 */6 * * *", async () => {
     })
   }
 })
+// })()
