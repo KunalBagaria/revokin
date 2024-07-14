@@ -21,7 +21,11 @@ import {
   addWalletController,
   addWalletConversation,
 } from "./controllers/addWalletController"
-import { manageSubscriptionController } from "./controllers/manageSub"
+import { manageSubscriptionController } from "./controllers/manageSubController"
+import {
+  removeWalletController,
+  removeWalletConversation,
+} from "./controllers/removeWalletController"
 import {
   startController,
   startConversation,
@@ -77,9 +81,11 @@ if (!token) throw new Error("BOT_TOKEN is unset")
 
   bot.use(createConversation(startConversation, "start"))
   bot.use(createConversation(addWalletConversation, "add_wallet"))
+  bot.use(createConversation(removeWalletConversation, "remove_wallet"))
 
   bot.command("start", startController)
   bot.command("add_wallet", addWalletController)
+  bot.command("remove_wallet", removeWalletController)
   bot.command("manage_sub", manageSubscriptionController)
 
   await bot.api.setMyCommands([
@@ -90,6 +96,10 @@ if (!token) throw new Error("BOT_TOKEN is unset")
     {
       command: "add_wallet",
       description: "Add a wallet to receive notifications",
+    },
+    {
+      command: "remove_wallet",
+      description: "Remove a wallet from receiving notifications",
     },
     {
       command: "manage_sub",

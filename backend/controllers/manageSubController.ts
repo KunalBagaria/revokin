@@ -38,5 +38,6 @@ export const manageSubscriptionController = async (ctx: MyContext) => {
     )
   } catch (e) {
     console.error(e)
+    await ctx.reply("An error occurred while processing your request.")
   }
 }
