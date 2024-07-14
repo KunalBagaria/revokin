@@ -21,6 +21,7 @@ import {
   addWalletController,
   addWalletConversation,
 } from "./controllers/addWalletController"
+import { manageSubscriptionController } from "./controllers/manageSub"
 import {
   startController,
   startConversation,
@@ -79,6 +80,7 @@ if (!token) throw new Error("BOT_TOKEN is unset")
 
   bot.command("start", startController)
   bot.command("add_wallet", addWalletController)
+  bot.command("manage_sub", manageSubscriptionController)
 
   await bot.api.setMyCommands([
     {
@@ -88,6 +90,10 @@ if (!token) throw new Error("BOT_TOKEN is unset")
     {
       command: "add_wallet",
       description: "Add a wallet to receive notifications",
+    },
+    {
+      command: "manage_sub",
+      description: "Manage your subscription",
     },
   ])
 
