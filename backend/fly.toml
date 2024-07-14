@@ -1,0 +1,20 @@
+# fly.toml app configuration file generated for revokin on 2024-07-14T13:28:48+05:30
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'revokin'
+primary_region = 'ams'
+
+[build]
+
+[http_service]
+internal_port = 3000
+force_https = true
+min_machines_running = 0
+processes = ['app']
+
+[[vm]]
+memory = '2gb'
+cpu_kind = 'shared'
+cpus = 1
