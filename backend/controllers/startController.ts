@@ -48,7 +48,7 @@ export const startConversation = async (
   try {
     const user = await prisma.user.findFirst({
       where: {
-        telegramId: ctx.chat.id,
+        telegramId: ctx.chat.id.toString(),
       },
     })
 
@@ -166,7 +166,7 @@ export const startConversation = async (
               ? `${ctx.chat.first_name} ${ctx.chat.last_name}`
               : "Unknown",
           email: email,
-          telegramId: ctx.chat.id,
+          telegramId: ctx.chat.id.toString(),
           tgConnectCode: randomCode,
         },
       })

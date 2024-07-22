@@ -20,6 +20,7 @@ new Elysia()
     async ({
       headers,
       request,
+      // body,
     }: {
       body: any
       headers: Record<string, string>

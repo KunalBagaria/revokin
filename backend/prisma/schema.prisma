@@ -14,7 +14,7 @@ model User {
 
   name                String
   email               String    @unique
-  telegramId          Int?
+  telegramId          String?
   tgConnectCode       String
   subscriptionEndDate DateTime?
   maxActiveWallets    Int?

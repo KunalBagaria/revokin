@@ -19,7 +19,7 @@ export const removeWalletConversation = async (
   try {
     const user = await prisma.user.findFirst({
       where: {
-        telegramId: ctx.chat.id,
+        telegramId: ctx.chat.id.toString(),
       },
       include: {
         wallets: true,
