@@ -90,11 +90,11 @@ new Elysia()
             const product = await stripeClient.products.retrieve(plan.product)
             const productName = product.name
 
-            let maxWallets
+            let maxWallets = 3
 
-            if (productName === "Revokin Subscription") {
-              maxWallets = 3
-            }
+            // if (productName === "Revokin Subscription") {
+            //   maxWallets = 3
+            // }
 
             if (!user) {
               return new Response(
