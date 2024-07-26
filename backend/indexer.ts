@@ -11,11 +11,15 @@ import { prisma } from "./lib/db"
 configDotenv()
 
 if (!process.env.HELIUS_API_KEY) {
+  console.log("HELIUS_API_KEY env var is required")
   throw new Error("HELIUS_API_KEY env var is required")
 }
 
 const token = process.env.BOT_TOKEN
-if (!token) throw new Error("BOT_TOKEN is unset")
+if (!token) {
+  console.log("BOT_TOKEN is unset")
+  throw new Error("BOT_TOKEN is unset")
+}
 
 const tgApi = new Api(token)
 

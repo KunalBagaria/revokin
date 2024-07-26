@@ -1,8 +1,10 @@
 # syntax = docker/dockerfile:1
 
 # Adjust BUN_VERSION as desired
-ARG BUN_VERSION=1.1.9
-FROM oven/bun:${BUN_VERSION}-slim as base
+# ARG BUN_VERSION=1.1.9
+# FROM oven/bun:${BUN_VERSION}-slim as base
+
+FROM node:18-slim as base
 
 LABEL fly_launch_runtime="Bun/Prisma"
 
@@ -18,7 +20,9 @@ FROM base as build
 
 # Install packages needed to build node modules
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential openssl pkg-config python-is-python3
+    apt-get install --no-install-recommends -y build-essential openssl pkg-config python-is-python3 curl
+
+RUN npm install -g bun 
 
 # Install node modules
 COPY --link bun.lockb package.json ./
@@ -35,9 +39,11 @@ COPY --link . .
 # Final stage for app image
 FROM base
 
+RUN npm install -g bun 
+
 # Install packages needed for deployment
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y openssl && \
+    apt-get install --no-install-recommends -y openssl curl && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Copy built application

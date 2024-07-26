@@ -19,8 +19,7 @@
     "@types/bun": "latest",
     "@types/node-cron": "^3.0.11",
     "concurrently": "^8.2.2",
-    "prisma": "^5.15.0",
-    "tsx": "^4.11.0"
+    "prisma": "^5.15.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -41,6 +40,7 @@
     "node-cron": "^3.0.3",
     "resend": "^3.2.0",
     "stripe": "^15.8.0",
-    "ws": "^8.17.0"
+    "ws": "^8.17.0",
+    "tsx": "^4.11.0"
   }
 }
