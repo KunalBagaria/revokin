@@ -28,7 +28,7 @@ import axios from "axios"
 import { toast } from "sonner"
 
 import { siteConfig } from "@/config/site"
-import { GithubIcon, WagmiLogo } from "@/components/icons"
+import { GithubIcon, TelegramLogo, WagmiLogo } from "@/components/icons"
 import NFTImage from "@/components/nft-image"
 import { title } from "@/components/primitives"
 
@@ -231,6 +231,15 @@ export default function Home() {
           Support Us
         </Link>
       </div>
+
+      <Link
+        isExternal
+        className={buttonStyles({ radius: "full", color: "primary" })}
+        href={siteConfig.links.bot}
+      >
+        <TelegramLogo size={24} />
+        Receive Delegation Notifications
+      </Link>
 
       <div className="flex flex-col md:flex-row gap-4 items-center justify-center mt-8 mb-8">
         <Input
